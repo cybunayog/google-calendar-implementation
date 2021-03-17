@@ -1,5 +1,4 @@
 const { google } = require('googleapis');
-const { auth } = require('googleapis/build/src/apis/abusiveexperiencereport');
 const { calendar } = require('googleapis/build/src/apis/calendar');
 
 const CALENDAR_ID = 'primary';
@@ -8,10 +7,11 @@ class gCalendar {
   // Constructor needs authentication
   constructor(auth) {
     this.auth = auth;
-    this.calendar = google.calendar({ version: 'v3', auth });
   }
 
-  function addEvent(summary, location, desc, start_date, end_date) {
+  static calendar = google.calendar({ version: 'v3', auth });
+
+  addEvent(summary, location, desc, start_date, end_date) {
     // Event object
     let event = {
       'summary': summary,
@@ -35,8 +35,7 @@ class gCalendar {
     };
 
     // Insert event into calendar
-    return this.calendar.events.insert({
-      auth: this.auth,
+    return calendar.events.insert({
       calendarId: CALENDAR_ID,
       resource: event,
     }, (err, event) => {
@@ -46,11 +45,12 @@ class gCalendar {
       }
       console.log('Event created: %s', event.htmlLink)
     }
+    );
   }
 
   // List 10 events
-  function listEvents() {
-    return this.calendar.events.list({
+  listEvents() {
+    return calendar.events.list({
       calendarId: CALENDAR_ID,
       timeMin: (new Date()).toISOString(),
       maxResults: 10,
