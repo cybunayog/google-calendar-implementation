@@ -7,9 +7,9 @@ class gCalendar {
   // Constructor needs authentication
   constructor(auth) {
     this.auth = auth;
+    this.calendar = google.calendar({ version: 'v3', auth });
   }
 
-  static calendar = google.calendar({ version: 'v3', auth });
 
   addEvent(summary, location, desc, start_date, end_date) {
     // Event object
