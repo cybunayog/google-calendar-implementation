@@ -2,6 +2,5 @@
 node_modules/
 
 credentials.json
-credentials(1).json
 
 token.json

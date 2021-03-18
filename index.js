@@ -1,19 +1,79 @@
+//TODO: create a single event on google calendar
+// Startup code to authenticate oauth for Google services
+require('dotenv').config();
 const fs = require('fs');
 const readline = require('readline');
-const {google} = require('googleapis');
+const prompt = require('prompt');
+const moment = require('moment');
+const { google } = require('googleapis');
+// const gCalendar = require('./classes/googleCalendar');
+// const Authorize = require('./classes/auth');
 
-// If modifying these scopes, delete token.json.
-const SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
+// Scope that the API will read
+const SCOPES = ['https://www.googleapis.com/auth/calendar'];
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+const promptSchema = {
+  properties: {
+    summary: {
+      description: 'What is the title of the event?',
+      required: true,
+    },
+    location: {
+      description: 'Enter the location. If none, press enter',
+      default: '',
+      required: false,
+    },
+    desc: {
+      description: `What's the event about?`,
+      required: true,
+    },
+    start_date: {
+      description: 'Starting date? (Format: 2020-01-01)',
+      required: true,
+    },
+    start_time: {
+      description: 'Starting time (Format: 09:30) If none, press enter',
+      default: ''
+    },
+    end_date: {
+      description: 'Ending date? (Format: 2020-01-01)',
+      required: true
+    },
+    end_time: {
+      description: 'Ending time? (Format: 09:30) If none, press enter',
+      default: ''
+    }
+  }
+}
+
+// // Load client secrets from a local file
+// fs.readFile('credentials(1).json', (err, content) => {
+//   if (err) return console.log('Error loading secret files: ', err);
+//   let secretContents = JSON.parse(content);
+//   // userAuth class gets the credentials and creates the OAuth2Client
+//   // userCalendar gets the OAuth2Client
+//   userAuth = new Authorize(secretContents);
+//   userCalendar = new gCalendar(userAuth);
+//   userAuth.authorize(secretContents, userCalendar.listEvents());
+// });
+
+
 // The file token.json stores the user's access and refresh tokens, and is
 // created automatically when the authorization flow completes for the first
 // time.
 const TOKEN_PATH = 'token.json';
 
+let calendar;
+
 // Load client secrets from a local file.
 fs.readFile('credentials.json', (err, content) => {
   if (err) return console.log('Error loading client secret file:', err);
   // Authorize a client with credentials, then call the Google Calendar API.
-  authorize(JSON.parse(content), listEvents);
+  authorize(JSON.parse(content), addEvent);
 });
 
 /**
@@ -47,10 +107,7 @@ function getAccessToken(oAuth2Client, callback) {
     scope: SCOPES,
   });
   console.log('Authorize this app by visiting this url:', authUrl);
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
+
   rl.question('Enter the code from that page here: ', (code) => {
     rl.close();
     oAuth2Client.getToken(code, (err, token) => {
@@ -71,7 +128,7 @@ function getAccessToken(oAuth2Client, callback) {
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
  */
 function listEvents(auth) {
-  const calendar = google.calendar({version: 'v3', auth});
+  calendar = google.calendar({version: 'v3', auth});
   calendar.events.list({
     calendarId: 'primary',
     timeMin: (new Date()).toISOString(),
@@ -93,8 +150,35 @@ function listEvents(auth) {
   });
 }
 
-function addEvent(summary, location, desc, start_date, end_date) {
+function addEvent(auth) {
+  calendar = google.calendar({version: 'v3', auth});
   // Event object
+  let summary, location, desc, start_date, end_date;
+  // rl.question('What is the title of the event?', answer => {
+    
+  //   summary = answer;
+  //   console.log(summary);
+  // });
+
+  // rl.question('Is there a location? (y/n)', answer => {
+    
+  //   if (answer === 'n') {
+  //     rl.question('Where is the location?', res => {
+  //       location = res;
+  //     });
+  //   } else {
+  //     location = '';
+  //   }
+  //   console.log(location);
+  // })
+
+
+  prompt.start();
+
+  prompt.get(promptSchema, (err, res) => {
+    console.log(res);
+  });
+  
   let event = {
     'summary': summary,
     'location': location,
@@ -117,15 +201,15 @@ function addEvent(summary, location, desc, start_date, end_date) {
   };
 
   // Insert event into calendar
-  return calendar.events.insert({
-    calendarId: CALENDAR_ID,
-    resource: event,
-    }, (err, event) => {
-      if (err) {
-        console.log('There was an error contacting the Calendar service: ', err);
-        return;
-      }
-      console.log('Event created: %s', event.htmlLink)
-    }
-  ); 
+  // return calendar.events.insert({
+  //   calendarId: CALENDAR_ID,
+  //   resource: event,
+  //   }, (err, event) => {
+  //     if (err) {
+  //       console.log('There was an error contacting the Calendar service: ', err);
+  //       return;
+  //     }
+  //     console.log('Event created: %s', event.htmlLink)
+  //     }
+  // ); 
 }
