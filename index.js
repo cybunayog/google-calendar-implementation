@@ -9,12 +9,16 @@ const { google } = require('googleapis');
 // const gCalendar = require('./classes/googleCalendar');
 // const Authorize = require('./classes/auth');
 
-// Scope that the API will read
+// Scope that the API will read and other predefined variables
 const SCOPES = ['https://www.googleapis.com/auth/calendar'];
+const CALENDAR_ID = 'primary';
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
-  });
+});
+  
+//NOTE: Delete token.json in the directory if having auth errors for testing. The script will regenerate a new token for every run.
+const TOKEN_PATH = 'token.json';
 
 const promptSchema = {
   properties: {
@@ -32,15 +36,15 @@ const promptSchema = {
       required: true,
     },
     start_date: {
-      description: 'Starting date? (Format: 2020-01-01)',
+      description: `Starting date? (Format: ${moment().format("YYYY-MM-DD")})`,
       required: true,
     },
     start_time: {
-      description: 'Starting time (Format: 09:30) If none, press enter',
+      description: `Starting time (Format: 09:30) If none, press enter`,
       default: ''
     },
     end_date: {
-      description: 'Ending date? (Format: 2020-01-01)',
+      description: `Ending date? (Format: ${moment().format('YYYY-MM-DD')})`,
       required: true
     },
     end_time: {
@@ -50,22 +54,9 @@ const promptSchema = {
   }
 }
 
-// // Load client secrets from a local file
-// fs.readFile('credentials(1).json', (err, content) => {
-//   if (err) return console.log('Error loading secret files: ', err);
-//   let secretContents = JSON.parse(content);
-//   // userAuth class gets the credentials and creates the OAuth2Client
-//   // userCalendar gets the OAuth2Client
-//   userAuth = new Authorize(secretContents);
-//   userCalendar = new gCalendar(userAuth);
-//   userAuth.authorize(secretContents, userCalendar.listEvents());
-// });
-
-
 // The file token.json stores the user's access and refresh tokens, and is
 // created automatically when the authorization flow completes for the first
 // time.
-const TOKEN_PATH = 'token.json';
 
 let calendar;
 
@@ -150,66 +141,61 @@ function listEvents(auth) {
   });
 }
 
+/**
+ * Creates an event on the user's primary calendar.
+ * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
+ */
 function addEvent(auth) {
   calendar = google.calendar({version: 'v3', auth});
   // Event object
-  let summary, location, desc, start_date, end_date;
-  // rl.question('What is the title of the event?', answer => {
-    
-  //   summary = answer;
-  //   console.log(summary);
-  // });
-
-  // rl.question('Is there a location? (y/n)', answer => {
-    
-  //   if (answer === 'n') {
-  //     rl.question('Where is the location?', res => {
-  //       location = res;
-  //     });
-  //   } else {
-  //     location = '';
-  //   }
-  //   console.log(location);
-  // })
-
+  let summary, location, desc, start_date, end_date, event;
 
   prompt.start();
 
   prompt.get(promptSchema, (err, res) => {
-    console.log(res);
-  });
-  
-  let event = {
-    'summary': summary,
-    'location': location,
-    'description': desc,
-    'start': {
-      'dateTime': start_date,
-      'timeZone': 'America/Los Angeles'
-    },
-    'end': {
-      'dateTime': end_date,
-      'timeZone': 'America/Los Angeles'
-    },
-    'reminders': {
-      'useDefault': false,
-      'overrides': [
-        { 'method': 'email', 'minutes': 24 * 60 },
-        { 'method': 'popup', 'minutes': 10 },
-      ],
-    },
-  };
+    if (err) console.err(err);
+    summary = res.summary;
+    location = res.location;
+    desc = res.desc;
 
-  // Insert event into calendar
-  // return calendar.events.insert({
-  //   calendarId: CALENDAR_ID,
-  //   resource: event,
-  //   }, (err, event) => {
-  //     if (err) {
-  //       console.log('There was an error contacting the Calendar service: ', err);
-  //       return;
-  //     }
-  //     console.log('Event created: %s', event.htmlLink)
-  //     }
-  // ); 
+    // Time formatting
+    start_date = moment(`${res.start_date} ${res.start_time}`, moment.HTML5_FMT.DATETIME_LOCAL).format('YYYY-MM-DDTHH:mm');
+    end_date = moment(`${res.end_date} ${res.end_time}`, moment.HTML5_FMT.DATETIME_LOCAL).format('YYYY-MM-DDTHH:mm');
+
+    console.log(summary, location, desc, start_date, end_date);
+    
+    event = {
+      'summary': summary,
+      'location': location,
+      'description': desc,
+      'start': {
+        'dateTime': start_date,
+        'timeZone': 'America/Los Angeles'
+      },
+      'end': {
+        'dateTime': end_date,
+        'timeZone': 'America/Los Angeles'
+      },
+      'reminders': {
+        'useDefault': false,
+        'overrides': [
+          { 'method': 'email', 'minutes': 24 * 60 },
+          { 'method': 'popup', 'minutes': 10 },
+        ],
+      },
+    };
+
+    // Add event to calendar
+    return calendar.events.insert({
+    calendarId: CALENDAR_ID,
+    resource: event,
+      }, (err, event) => {
+        if (err) {
+          console.log('There was an error contacting the Calendar service: ', err);
+          return;
+        }
+        console.log('Event created: %s', event.htmlLink)
+        }
+    ); 
+  });
 }
