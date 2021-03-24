@@ -10,8 +10,9 @@ const { google } = require('googleapis');
 // const Authorize = require('./classes/auth');
 
 // Scope that the API will read and other predefined variables
-const SCOPES = ['https://www.googleapis.com/auth/calendar'];
-const CALENDAR_ID = 'primary';
+const SCOPES = 'https://www.googleapis.com/auth/calendar';
+const CALENDAR_ID = 'cbunayog17@apu.edu';
+const CLIENT_SECRET = 'credentials.json';
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -58,13 +59,13 @@ const promptSchema = {
 // created automatically when the authorization flow completes for the first
 // time.
 
-let calendar;
-
 // Load client secrets from a local file.
-fs.readFile('credentials.json', (err, content) => {
+fs.readFile(CLIENT_SECRET, (err, content) => {
   if (err) return console.log('Error loading client secret file:', err);
   // Authorize a client with credentials, then call the Google Calendar API.
-  authorize(JSON.parse(content), addEvent);
+  
+  authorize(JSON.parse(content), insertEvents);
+  //authorize(JSON.parse(content), listEvents);
 });
 
 /**
@@ -81,6 +82,7 @@ function authorize(credentials, callback) {
   // Check if we have previously stored a token.
   fs.readFile(TOKEN_PATH, (err, token) => {
     if (err) return getAccessToken(oAuth2Client, callback);
+    console.log("On authorize(): ", token);
     oAuth2Client.setCredentials(JSON.parse(token));
     callback(oAuth2Client);
   });
@@ -118,10 +120,10 @@ function getAccessToken(oAuth2Client, callback) {
  * Lists the next 10 events on the user's primary calendar.
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
  */
-function listEvents() {
-  calendar = google.calendar({version: 'v3', auth: process.env.API});
+function listEvents(auth) {
+  const calendar = google.calendar({version: 'v3', auth});
   calendar.events.list({
-    calendarId: 'primary',
+    calendarId: CALENDAR_ID,
     timeMin: (new Date()).toISOString(),
     maxResults: 10,
     singleEvents: true,
@@ -135,6 +137,9 @@ function listEvents() {
         const start = event.start.dateTime || event.start.date;
         console.log(`${start} - ${event.summary}`);
       });
+
+      // Kill node
+      process.exit(1);
     } else {
       console.log('No upcoming events found.');
     }
@@ -145,10 +150,10 @@ function listEvents() {
  * Creates an event on the user's primary calendar.
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
  */
-function addEvent(auth) {
-  calendar = google.calendar({version: 'v3', auth});
+function insertEvents(auth) {
+  const calendar = google.calendar({version: 'v3', auth});
   // Event object
-  let summary, location, desc, start_date, end_date, event;
+  let summary, location, desc, start_date, end_date;
 
   prompt.start();
 
@@ -164,7 +169,7 @@ function addEvent(auth) {
 
     console.log(summary, location, desc, start_date, end_date);
     
-    event = {
+    var event = {
       'summary': summary,
       'location': location,
       'description': desc,
@@ -186,15 +191,17 @@ function addEvent(auth) {
     };
 
     // Add event to calendar
-    return calendar.events.insert({
-    calendarId: CALENDAR_ID,
-    resource: event,
-      }, (err, event) => {
+    calendar.events.insert({
+      auth: auth,
+      calendarId: CALENDAR_ID,
+      resource: event,
+      }, (err, ev) => {
         if (err) {
-          console.log('There was an error contacting the Calendar service: ', err);
+          console.error('There was an error contacting the Calendar service: ', err);
+          console.log('AUTH: ', auth);
           return;
         }
-        console.log('Event created: %s', event.htmlLink)
+          console.log('Event created: %s', ev.data.htmlLink);
         }
     ); 
   });
