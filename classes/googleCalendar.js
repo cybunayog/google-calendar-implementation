@@ -1,17 +1,15 @@
 const { google } = require('googleapis');
-const { calendar } = require('googleapis/build/src/apis/calendar');
-
-const CALENDAR_ID = 'primary';
 
 class gCalendar {
   // Constructor needs authentication
-  constructor(auth) {
+  constructor(auth, calendarId) {
     this.auth = auth;
     this.calendar = google.calendar({ version: 'v3', auth });
+    this.calendarId = calendarId;
   }
 
 
-  addEvent(summary, location, desc, start_date, end_date) {
+  insertEvent(summary, location, desc, start_date, end_date) {
     // Event object
     let event = {
       'summary': summary,
@@ -19,11 +17,9 @@ class gCalendar {
       'description': desc,
       'start': {
         'dateTime': start_date,
-        'timeZone': 'America/Los Angeles'
       },
       'end': {
         'dateTime': end_date,
-        'timeZone': 'America/Los Angeles'
       },
       'reminders': {
         'useDefault': false,
@@ -36,7 +32,8 @@ class gCalendar {
 
     // Insert event into calendar
     return calendar.events.insert({
-      calendarId: CALENDAR_ID,
+      auth: this.auth,
+      calendarId: this.calendarId,
       resource: event,
     }, (err, event) => {
       if (err) {
@@ -49,9 +46,9 @@ class gCalendar {
   }
 
   // List 10 events
-  listEvents() {
+  listEvents(auth) {
     return calendar.events.list({
-      calendarId: CALENDAR_ID,
+      calendarId: this.calendarId,
       timeMin: (new Date()).toISOString(),
       maxResults: 10,
       singleEvents: true,

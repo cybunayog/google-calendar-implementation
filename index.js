@@ -10,8 +10,9 @@ const { google } = require('googleapis');
 // const Authorize = require('./classes/auth');
 
 // Scope that the API will read and other predefined variables
-const SCOPES = 'https://www.googleapis.com/auth/calendar';
-const CALENDAR_ID = 'cbunayog17@apu.edu';
+const SCOPES = ['https://www.googleapis.com/auth/calendar'];
+// const CALENDAR_ID = 'cbunayog17@apu.edu';
+const CALENDAR_ID = 'primary';
 const CLIENT_SECRET = 'credentials.json';
 const rl = readline.createInterface({
     input: process.stdin,
@@ -164,8 +165,8 @@ function insertEvents(auth) {
     desc = res.desc;
 
     // Time formatting
-    start_date = moment(`${res.start_date} ${res.start_time}`, moment.HTML5_FMT.DATETIME_LOCAL).format('YYYY-MM-DDTHH:mm');
-    end_date = moment(`${res.end_date} ${res.end_time}`, moment.HTML5_FMT.DATETIME_LOCAL).format('YYYY-MM-DDTHH:mm');
+    start_date = moment(`${res.start_date} ${res.start_time}`, moment.HTML5_FMT.DATETIME_LOCAL).format('YYYY-MM-DDTHH:mm:ss-07:00');
+    end_date = moment(`${res.end_date} ${res.end_time}`, moment.HTML5_FMT.DATETIME_LOCAL).format('YYYY-MM-DDTHH:mm:ss-07:00');
 
     console.log(summary, location, desc, start_date, end_date);
     
@@ -175,11 +176,9 @@ function insertEvents(auth) {
       'description': desc,
       'start': {
         'dateTime': start_date,
-        'timeZone': 'America/Los Angeles'
       },
       'end': {
         'dateTime': end_date,
-        'timeZone': 'America/Los Angeles'
       },
       'reminders': {
         'useDefault': false,
@@ -201,7 +200,8 @@ function insertEvents(auth) {
           console.log('AUTH: ', auth);
           return;
         }
-          console.log('Event created: %s', ev.data.htmlLink);
+        console.log('Success!! Event created: %s', ev.data.htmlLink);
+        process.exit(1);
         }
     ); 
   });
