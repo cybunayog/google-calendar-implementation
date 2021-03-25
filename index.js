@@ -1,23 +1,20 @@
-//TODO: create a single event on google calendar
 // Startup code to authenticate oauth for Google services
-require('dotenv').config();
 const fs = require('fs');
 const readline = require('readline');
 const prompt = require('prompt');
 const moment = require('moment');
 const { google } = require('googleapis');
-// const gCalendar = require('./classes/googleCalendar');
-// const Authorize = require('./classes/auth');
 
 // Scope that the API will read and other predefined variables
 const SCOPES = ['https://www.googleapis.com/auth/calendar'];
-// const CALENDAR_ID = 'cbunayog17@apu.edu';
-const CALENDAR_ID = 'primary';
+let calendarId;
+// const CALENDAR_ID = 'primary';
 const CLIENT_SECRET = 'credentials.json';
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
 });
+
   
 //NOTE: Delete token.json in the directory if having auth errors for testing. The script will regenerate a new token for every run.
 const TOKEN_PATH = 'token.json';
@@ -54,7 +51,7 @@ const promptSchema = {
       default: ''
     }
   }
-}
+};
 
 // The file token.json stores the user's access and refresh tokens, and is
 // created automatically when the authorization flow completes for the first
@@ -64,9 +61,19 @@ const promptSchema = {
 fs.readFile(CLIENT_SECRET, (err, content) => {
   if (err) return console.log('Error loading client secret file:', err);
   // Authorize a client with credentials, then call the Google Calendar API.
-  
-  authorize(JSON.parse(content), insertEvents);
-  //authorize(JSON.parse(content), listEvents);
+  rl.question("Would you like to look at (list) or create an (event)?", answer => {
+    switch (answer) {
+      case 'event':
+        console.log("You chose:", answer);
+        return authorize(JSON.parse(content), insertEvents);
+      case 'list':
+        console.log("You chose:", answer);
+        return authorize(JSON.parse(content), listEvents);
+      default:
+        console.log('Closing prompt....');
+        rl.close();
+    }
+  });
 });
 
 /**
@@ -83,7 +90,6 @@ function authorize(credentials, callback) {
   // Check if we have previously stored a token.
   fs.readFile(TOKEN_PATH, (err, token) => {
     if (err) return getAccessToken(oAuth2Client, callback);
-    console.log("On authorize(): ", token);
     oAuth2Client.setCredentials(JSON.parse(token));
     callback(oAuth2Client);
   });
@@ -164,7 +170,7 @@ function insertEvents(auth) {
     location = res.location;
     desc = res.desc;
 
-    // Time formatting
+    // Time formatting (It's set to PST)
     start_date = moment(`${res.start_date} ${res.start_time}`, moment.HTML5_FMT.DATETIME_LOCAL).format('YYYY-MM-DDTHH:mm:ss-07:00');
     end_date = moment(`${res.end_date} ${res.end_time}`, moment.HTML5_FMT.DATETIME_LOCAL).format('YYYY-MM-DDTHH:mm:ss-07:00');
 
@@ -203,6 +209,6 @@ function insertEvents(auth) {
         console.log('Success!! Event created: %s', ev.data.htmlLink);
         process.exit(1);
         }
-    ); 
-  });
-}
+      ); 
+    });
+  }
