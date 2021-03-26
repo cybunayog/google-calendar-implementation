@@ -114,10 +114,9 @@ function listEvents(auth) {
 
       // Kill program
       process.exit(130);
-    } else {
-      console.log('No upcoming events found.');
-      // Kill program
-      process.exit(130);
+      }
+    console.log('No upcoming events found.');
+    return;
     }
   });
 }
@@ -172,12 +171,11 @@ function insertEvents(auth) {
       }, (err, ev) => {
         if (err) {
           console.error('There was an error contacting the Calendar service: ', err);
-          // Kill program after execution
-          return process.exit(1);
+          return;
         }
         console.log('Success!! Event created: %s', ev.data.htmlLink);
       
-        //Kill program a
+        // Kill program 
         process.exit(130);
         }
       ); 
