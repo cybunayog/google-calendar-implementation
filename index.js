@@ -7,51 +7,16 @@ const { google } = require('googleapis');
 
 // Scope that the API will read and other predefined variables
 const SCOPES = ['https://www.googleapis.com/auth/calendar'];
-let calendarId;
-// const CALENDAR_ID = 'primary';
+const CALENDAR_ID = 'primary';
 const CLIENT_SECRET = 'credentials.json';
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
 });
-
+const promptSchema = require('./prompt');
   
 //NOTE: Delete token.json in the directory if having auth errors for testing. The script will regenerate a new token for every run.
 const TOKEN_PATH = 'token.json';
-
-const promptSchema = {
-  properties: {
-    summary: {
-      description: 'What is the title of the event?',
-      required: true,
-    },
-    location: {
-      description: 'Enter the location. If none, press enter',
-      default: '',
-      required: false,
-    },
-    desc: {
-      description: `What's the event about?`,
-      required: true,
-    },
-    start_date: {
-      description: `Starting date? (Format: ${moment().format("YYYY-MM-DD")})`,
-      required: true,
-    },
-    start_time: {
-      description: `Starting time (Format: 09:30) If none, press enter`,
-      default: ''
-    },
-    end_date: {
-      description: `Ending date? (Format: ${moment().format('YYYY-MM-DD')})`,
-      required: true
-    },
-    end_time: {
-      description: 'Ending time? (Format: 09:30) If none, press enter',
-      default: ''
-    }
-  }
-};
 
 // The file token.json stores the user's access and refresh tokens, and is
 // created automatically when the authorization flow completes for the first
@@ -203,7 +168,6 @@ function insertEvents(auth) {
       }, (err, ev) => {
         if (err) {
           console.error('There was an error contacting the Calendar service: ', err);
-          console.log('AUTH: ', auth);
           return;
         }
         console.log('Success!! Event created: %s', ev.data.htmlLink);
