@@ -1,19 +1,21 @@
-// Startup code to authenticate oauth for Google services
+// Startup code to authenticate oauth for Google services & other packages/files
 const fs = require('fs');
 const readline = require('readline');
 const prompt = require('prompt');
 const moment = require('moment');
 const { google } = require('googleapis');
+const promptSchema = require('./prompt');
 
 // Scope that the API will read and other predefined variables
 const SCOPES = ['https://www.googleapis.com/auth/calendar'];
-const CALENDAR_ID = 'primary';
+const CALENDAR_ID = 'primary'; // Primary is the default
 const CLIENT_SECRET = 'credentials.json';
+
+// Initial setup for readline package
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
 });
-const promptSchema = require('./prompt');
   
 //NOTE: Delete token.json in the directory if having auth errors for testing. The script will regenerate a new token for every run.
 const TOKEN_PATH = 'token.json';
@@ -110,10 +112,12 @@ function listEvents(auth) {
         console.log(`${start} - ${event.summary}`);
       });
 
-      // Kill node
-      process.exit(1);
+      // Kill program
+      process.exit(130);
     } else {
       console.log('No upcoming events found.');
+      // Kill program
+      process.exit(130);
     }
   });
 }
@@ -168,10 +172,13 @@ function insertEvents(auth) {
       }, (err, ev) => {
         if (err) {
           console.error('There was an error contacting the Calendar service: ', err);
-          return;
+          // Kill program after execution
+          return process.exit(1);
         }
         console.log('Success!! Event created: %s', ev.data.htmlLink);
-        process.exit(1);
+      
+        //Kill program a
+        process.exit(130);
         }
       ); 
     });
