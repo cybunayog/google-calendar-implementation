@@ -119,7 +119,7 @@ function listEvents(auth, id) {
       });
 
       // Kill program
-      process.exit(130);
+      process.exit();
     }
     console.log('No upcoming events found.');
     return;
@@ -181,7 +181,7 @@ function insertEvents(auth) {
         console.log('Success!! Event created at %s', ev.data.htmlLink);
       
         // Kill program 
-        process.exit(130);
+        process.exit();
         }
       ); 
     });
