@@ -12,6 +12,7 @@
   "dependencies": {
     "googleapis": "^68.0.0",
     "moment": "^2.29.1",
-    "prompt": "^1.1.0"
+    "prompt": "^1.1.0",
+    "prompt-sync": "^4.2.0"
   }
 }
